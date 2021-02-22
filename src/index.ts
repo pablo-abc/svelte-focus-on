@@ -1,23 +1,30 @@
 import {
   disableBodyScroll,
-  clearAllBodyScrollLocks,
+  enableBodyScroll,
   BodyScrollOptions,
 } from 'body-scroll-lock';
 import focusLock from 'dom-focus-lock';
 import { hideOthers } from 'aria-hidden';
 
-export interface SvelteFocusOnOptions extends BodyScrollOptions {}
+export { clearAllBodyScrollLocks } from 'body-scroll-lock';
 
-export function focusOn(element: HTMLElement, options?: SvelteFocusOnOptions) {
-  focusLock.on(element);
-  disableBodyScroll(element, options);
-  const undo = hideOthers(element);
+export interface SvelteFocusOnOptions extends BodyScrollOptions {
+  parent?: HTMLElement;
+}
 
-  return {
-    destroy() {
-      focusLock.off(element);
-      clearAllBodyScrollLocks;
-      undo();
-    },
+export function useFocusOn(options?: SvelteFocusOnOptions) {
+  const { parent, ...bodyScrollOptions } = options ?? {};
+  return function focusOn(element: HTMLElement) {
+    focusLock.on(element);
+    disableBodyScroll(element, bodyScrollOptions);
+    const undo = hideOthers(element, parent);
+
+    return {
+      destroy() {
+        focusLock.off(element);
+        enableBodyScroll(element);
+        undo();
+      },
+    };
   };
 }
